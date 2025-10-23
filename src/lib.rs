@@ -11,7 +11,7 @@ mod watcher;
 use watcher::Watcher;
 
 mod provider;
-pub use provider::TlsServerConfigProvider;
+pub use provider::{TlsClientConfigProvider, TlsServerConfigProvider};
 
 mod loader;
 pub use loader::{FileTlsServerConfigLoader, TlsServerConfigLoader};

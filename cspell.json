@@ -11,7 +11,8 @@
         "oneshot",
         "rustls",
         "serde",
-        "successfuly"
+        "successfuly",
+        "webpki"
     ],
     "ignorePaths": [
         "target",

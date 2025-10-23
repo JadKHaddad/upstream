@@ -14,25 +14,25 @@ hosts:
     upstreams:
       - domain: 127.0.0.1
         port: 8001
+        kind: Tcp
       - domain: 127.0.0.1
         port: 8081
+        kind: Tcp
 
   - addr: 127.0.0.1:2777
     kind: Tcp
     upstreams:
       - domain: 127.0.0.1
         port: 8001
+        kind: Tcp
       - domain: 127.0.0.1
         port: 8081
-
+        kind: Tcp
+        
   - addr: 127.0.0.1:2778
-    kind: Tls
-    certs:
-      certs: "certs/cert.pem"
-      key: "certs/key.pem"
-      watch:
-        kind: Debounce
-        duration: 2s
+    kind: Tcp
     upstreams:
-      - domain: 127.0.0.1
-        port: 8001
+      - domain: www.google.com
+        port: 443
+        kind: Tls
+        certs: WebPki

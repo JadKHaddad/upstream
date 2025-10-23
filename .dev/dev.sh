@@ -12,3 +12,8 @@ python3 -m http.server 8081
 
 curl --cacert certs/cert.pem https://localhost:2776
 curl http://localhost:2777
+
+curl http://localhost:2778 # should connect to google.com:443. Google will respond with 404 since curl is setting the Host header to localhost
+
+# This works around curl setting the Host header to google.com
+printf 'GET / HTTP/1.1\r\nHost: google.com\r\nConnection: close\r\n\r\n' | nc localhost 2778 -q 1

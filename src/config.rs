@@ -80,4 +80,18 @@ pub enum Watch {
 pub struct UpstreamConfig {
     pub domain: String,
     pub port: u16,
+    #[serde(flatten)]
+    pub kind: UpstreamConfigKind,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(tag = "kind")]
+pub enum UpstreamConfigKind {
+    Tcp,
+    Tls { certs: UpstreamConfigTlsCertsKind },
+}
+
+#[derive(Debug, Deserialize)]
+pub enum UpstreamConfigTlsCertsKind {
+    WebPki,
 }

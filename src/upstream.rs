@@ -1,6 +1,10 @@
 use std::net::SocketAddr;
 
-use crate::upstream::connected::ConnectedUpstream;
+use crate::{
+    DnsResolver, TlsClientConfigProvider,
+    config::{UpstreamConfig, UpstreamConfigKind, UpstreamConfigTlsCertsKind},
+    upstream::connected::ConnectedUpstream,
+};
 
 mod tcp;
 pub use tcp::TcpUpstream;
@@ -25,6 +29,24 @@ impl Upstream {
         Self {
             kind: UpstreamKind::Tcp(upstream),
         }
+    }
+
+    pub fn from_config(upstream: UpstreamConfig, resolver: DnsResolver) -> Self {
+        let upstream = match upstream.kind {
+            UpstreamConfigKind::Tcp => TcpUpstream::plain(
+                UpstreamAddress::new(upstream.domain.leak(), upstream.port),
+                resolver.clone(),
+            ),
+            UpstreamConfigKind::Tls { certs } => match certs {
+                UpstreamConfigTlsCertsKind::WebPki => TcpUpstream::tls(
+                    UpstreamAddress::new(upstream.domain.leak(), upstream.port),
+                    resolver.clone(),
+                    TlsClientConfigProvider::webpki(),
+                ),
+            },
+        };
+
+        Self::tcp(upstream)
     }
 
     pub async fn connect(&self) -> anyhow::Result<(ConnectedUpstream, SocketAddr)> {

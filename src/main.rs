@@ -3,8 +3,8 @@ use clap::Parser;
 
 use tokio::task::JoinSet;
 use upstream::{
-    Args, DnsResolver, FileTlsServerConfigLoader, Host, LoadBalancer, TcpHost, TcpUpstream,
-    TlsServerConfigProvider, Upstream, UpstreamAddress,
+    Args, DnsResolver, FileTlsServerConfigLoader, Host, LoadBalancer, TcpHost,
+    TlsServerConfigProvider, Upstream,
     config::{Config, DnsResolverConfig, HostConfigKind, RuntimeConfig},
 };
 
@@ -37,22 +37,14 @@ fn main() -> anyhow::Result<()> {
                         1 => {
                             let upstream = host.upstreams.remove(0);
 
-                            let upstream = Upstream::tcp(TcpUpstream::plain(
-                                UpstreamAddress::new(upstream.domain.leak(), upstream.port),
-                                resolver.clone(),
-                            ));
+                            let upstream = Upstream::from_config(upstream, resolver.clone());
 
                             LoadBalancer::identity(upstream)
                         }
                         _ => LoadBalancer::static_fifo(Box::leak(
                             host.upstreams
                                 .into_iter()
-                                .map(|upstream| {
-                                    Upstream::tcp(TcpUpstream::plain(
-                                        UpstreamAddress::new(upstream.domain.leak(), upstream.port),
-                                        resolver.clone(),
-                                    ))
-                                })
+                                .map(|upstream| Upstream::from_config(upstream, resolver.clone()))
                                 .collect::<Vec<_>>()
                                 .into_boxed_slice(),
                         )),
