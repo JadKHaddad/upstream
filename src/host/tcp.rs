@@ -12,10 +12,32 @@ pub struct TcpHost {
 }
 
 impl TcpHost {
+    pub fn plain(addr: SocketAddr, load_balancer: LoadBalancer) -> Self {
+        Self {
+            addr,
+            load_balancer,
+            kind: TcpHostKind::Plain,
+        }
+    }
+
+    pub fn tls(
+        addr: SocketAddr,
+        load_balancer: LoadBalancer,
+        tls_provider: TlsServerConfigProvider,
+    ) -> Self {
+        Self {
+            addr,
+            load_balancer,
+            kind: TcpHostKind::Tls(tls_provider),
+        }
+    }
+
     pub async fn run(mut self) -> anyhow::Result<()> {
         let addr = self.addr;
 
         let listener = self.kind.bind(addr).await?;
+
+        tracing::info!(%addr, "Listening");
 
         loop {
             let (mut stream, addr) = listener.accept().await?;
@@ -26,7 +48,7 @@ impl TcpHost {
                 unreachable!("Load balancer should emit an upstream")
             };
 
-            tracing::info!(%addr, domain=%upstream.domain, port=%upstream.port, "Found upstream");
+            tracing::info!(%addr, ?upstream, "Found upstream");
 
             let fut = async move {
                 let (mut upstream, upstream_addr) = upstream.connect().await?;

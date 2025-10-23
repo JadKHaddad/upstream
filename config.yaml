@@ -13,13 +13,26 @@ hosts:
         duration: 2s
     upstreams:
       - domain: 127.0.0.1
-        port: 8000
+        port: 8001
       - domain: 127.0.0.1
-        port: 8080
+        port: 8081
+
   - addr: 127.0.0.1:2777
     kind: Tcp
     upstreams:
       - domain: 127.0.0.1
-        port: 7000
+        port: 8001
       - domain: 127.0.0.1
-        port: 7070
+        port: 8081
+
+  - addr: 127.0.0.1:2778
+    kind: Tls
+    certs:
+      certs: "certs/cert.pem"
+      key: "certs/key.pem"
+      watch:
+        kind: Debounce
+        duration: 2s
+    upstreams:
+      - domain: 127.0.0.1
+        port: 8001

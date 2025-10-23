@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::FileTlsServerConfigLoader;
+use crate::{FileTlsServerConfigLoader, config::Watch};
 
 mod static_file_tls_server_config_provider;
 use static_file_tls_server_config_provider::StaticFileTlsServerConfigProvider;
@@ -23,7 +23,7 @@ impl TlsServerConfigProvider {
 
     pub async fn file_watch(
         loader: FileTlsServerConfigLoader,
-        watch: crate::config::Watch,
+        watch: Watch,
     ) -> anyhow::Result<Self> {
         let provider = WatchFileTlsServerConfigProvider::new(loader, watch).await?;
 

@@ -1,0 +1,14 @@
+runtime: CurrentThread
+dns_resolver: Hickory
+hosts:
+  - addr: 0.0.0.0:2776
+    kind: Tls
+    certs:
+      certs: "/etc/upstream/certs/cert.pem"
+      key: "/etc/upstream/certs/key.pem"
+      watch:
+        kind: Debounce
+        duration: 2s
+    upstreams:
+      - domain: 192.168.178.97
+        port: 2775

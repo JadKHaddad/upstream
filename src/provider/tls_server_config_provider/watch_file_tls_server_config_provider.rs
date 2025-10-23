@@ -5,7 +5,7 @@ use arc_swap::ArcSwap;
 use futures::StreamExt;
 use rustls::ServerConfig;
 
-use crate::{FileTlsServerConfigLoader, config::Watch, watcher::Watcher};
+use crate::{FileTlsServerConfigLoader, Watcher, config::Watch};
 
 #[derive(Clone)]
 pub struct WatchFileTlsServerConfigProvider {

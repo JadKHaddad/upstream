@@ -1,5 +1,5 @@
 mod upstream;
-pub use upstream::Upstream;
+pub use upstream::{TcpUpstream, Upstream, UpstreamAddress};
 
 mod load_balancer;
 pub use load_balancer::LoadBalancer;
@@ -16,8 +16,10 @@ pub use provider::TlsServerConfigProvider;
 mod loader;
 pub use loader::{FileTlsServerConfigLoader, TlsServerConfigLoader};
 
-mod config;
-pub use config::Config;
+pub mod config;
 
 mod host;
-pub use host::Host;
+pub use host::{Host, TcpHost};
+
+mod args;
+pub use args::Args;

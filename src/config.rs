@@ -8,8 +8,8 @@ use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
-    pub runtime: Runtime,
-    pub dns_resolver: DnsResolver,
+    pub runtime: RuntimeConfig,
+    pub dns_resolver: DnsResolverConfig,
     pub hosts: Vec<HostConfig>,
 }
 
@@ -30,20 +30,20 @@ impl Config {
 }
 
 #[derive(Debug, Deserialize)]
-pub enum Runtime {
+pub enum RuntimeConfig {
     MultiThread,
     CurrentThread,
 }
 
 #[derive(Debug, Deserialize)]
-pub enum DnsResolver {
+pub enum DnsResolverConfig {
     Hickory,
     Tokio,
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(tag = "kind")]
-pub enum HostKind {
+pub enum HostConfigKind {
     Tcp,
     Tls { certs: HostConfigCerts },
 }
@@ -53,7 +53,7 @@ pub struct HostConfig {
     pub addr: SocketAddr,
     pub upstreams: Vec<UpstreamConfig>,
     #[serde(flatten)]
-    pub kind: HostKind,
+    pub kind: HostConfigKind,
 }
 
 #[derive(Debug, Deserialize)]

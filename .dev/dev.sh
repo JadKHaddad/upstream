@@ -7,7 +7,8 @@ openssl req -x509 -newkey rsa:4096 \
   -addext "extendedKeyUsage = serverAuth, clientAuth" \
   -addext "subjectAltName=DNS:localhost"
 
-python -m http.server 8000
-python -m http.server 8080
+python3 -m http.server 8001
+python3 -m http.server 8081
 
 curl --cacert certs/cert.pem https://localhost:2776
+curl http://localhost:2777
