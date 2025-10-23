@@ -12,6 +12,7 @@ pub struct WatchFileTlsServerConfigProvider {
     config: Arc<ArcSwap<ServerConfig>>,
 }
 
+/// TODO: can we make this just take a stream of change events of the files it needs so that we can create a global watcher that watches everything?
 impl WatchFileTlsServerConfigProvider {
     pub async fn new(loader: FileTlsServerConfigLoader, watch: Watch) -> anyhow::Result<Self> {
         let config = loader.load().await.context("Failed to load config")?;

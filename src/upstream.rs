@@ -33,6 +33,7 @@ impl Upstream {
         }
     }
 
+    // TODO: do the same in tcp_server_stream
     pub async fn connect(&self) -> anyhow::Result<(impl AsyncRead + AsyncWrite, SocketAddr)> {
         // TODO: iterate over the addr iter and try connect to all
         let addr = self
