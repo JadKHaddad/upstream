@@ -1,7 +1,7 @@
-use std::{path::Path, time::Duration};
+use std::{fmt::Display, path::Path, time::Duration};
 
 use anyhow::Context;
-use futures::{Stream, StreamExt};
+use futures::channel::mpsc::UnboundedSender;
 
 pub enum Watcher {
     Poll(notify::PollWatcher),
@@ -30,6 +30,22 @@ pub enum WatchError {
     Debounce(Vec<notify::Error>),
 }
 
+impl Display for WatchError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Poll(err) => write!(f, "Poll watch error: {}", err),
+            Self::Debounce(errs) => {
+                for err in errs {
+                    writeln!(f, "Debounce watch error: {}", err)?;
+                }
+                Ok(())
+            }
+        }
+    }
+}
+
+impl core::error::Error for WatchError {}
+
 impl WatchEvent {
     const fn _is_change_event(event: &notify::Event) -> bool {
         matches!(
@@ -51,41 +67,42 @@ impl WatchEvent {
 impl Watcher {
     pub fn poll(
         duration: Duration,
-    ) -> anyhow::Result<(Self, impl Stream<Item = Result<WatchEvent, WatchError>>)> {
-        let (tx, rx) = futures::channel::mpsc::unbounded();
-
+        tx: UnboundedSender<Result<WatchEvent, WatchError>>,
+    ) -> anyhow::Result<Self> {
         let watcher = notify::PollWatcher::new(
-            move |res: Result<notify::Event, notify::Error>| {
-                _ = tx.unbounded_send(res.map(WatchEvent::Poll).map_err(WatchError::Poll));
+            move |res: Result<notify::Event, notify::Error>| match res
+                .map(WatchEvent::Poll)
+                .map_err(WatchError::Poll)
+            {
+                Ok(ev) if !ev.is_change_event() => {}
+                res => {
+                    _ = tx.unbounded_send(res);
+                }
             },
             notify::Config::default().with_poll_interval(duration),
         )?;
 
-        let rx = rx.filter(|event| {
-            futures::future::ready(matches!(event, Ok(ev) if ev.is_change_event()))
-        });
-
-        Ok((Self::Poll(watcher), rx))
+        Ok(Self::Poll(watcher))
     }
 
     pub fn debounce(
         duration: Duration,
-    ) -> anyhow::Result<(Self, impl Stream<Item = Result<WatchEvent, WatchError>>)> {
-        let (tx, rx) = futures::channel::mpsc::unbounded();
-
+        tx: UnboundedSender<Result<WatchEvent, WatchError>>,
+    ) -> anyhow::Result<Self> {
         let watcher = notify_debouncer_full::new_debouncer(
             duration,
             None,
             move |res: Result<Vec<notify_debouncer_full::DebouncedEvent>, Vec<notify::Error>>| {
-                _ = tx.unbounded_send(res.map(WatchEvent::Debounce).map_err(WatchError::Debounce));
+                match res.map(WatchEvent::Debounce).map_err(WatchError::Debounce) {
+                    Ok(ev) if !ev.is_change_event() => {}
+                    res => {
+                        _ = tx.unbounded_send(res);
+                    }
+                }
             },
         )?;
 
-        let rx = rx.filter(|event| {
-            futures::future::ready(matches!(event, Ok(ev) if ev.is_change_event()))
-        });
-
-        Ok((Self::Debounce(watcher), rx))
+        Ok(Self::Debounce(watcher))
     }
 
     fn watch(&mut self, path: &Path) -> notify::Result<()> {
