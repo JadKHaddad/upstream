@@ -1,6 +1,6 @@
 use std::net::IpAddr;
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub struct TokioDnsResolver {
     _priv: (),
 }

@@ -11,9 +11,13 @@ mod watcher;
 use watcher::Watcher;
 
 mod provider;
+pub use provider::TlsServerConfigProvider;
 
 mod loader;
 pub use loader::{FileTlsServerConfigLoader, TlsServerConfigLoader};
 
 mod config;
 pub use config::Config;
+
+mod host;
+pub use host::Host;

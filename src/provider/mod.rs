@@ -1,1 +1,2 @@
 mod tls_server_config_provider;
+pub use tls_server_config_provider::TlsServerConfigProvider;

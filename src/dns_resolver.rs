@@ -10,7 +10,7 @@ use crate::dns_resolver::global_hickory_dns_resolver::GlobalHickoryDnsResolver;
 
 mod global_hickory_dns_resolver;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum DnsResolver {
     Hickory(GlobalHickoryDnsResolver),
     Tokio(TokioDnsResolver),
