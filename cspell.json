@@ -1,0 +1,20 @@
+{
+    "version": "0.2",
+    "language": "en",
+    "words": [
+        "addext",
+        "debouncer",
+        "humantime",
+        "jadkhaddad",
+        "keyout",
+        "newkey",
+        "oneshot",
+        "rustls",
+        "serde",
+        "successfuly"
+    ],
+    "ignorePaths": [
+        "target",
+        ".gitignore"
+    ]
+}

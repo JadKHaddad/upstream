@@ -1,0 +1,25 @@
+services:
+  upstream:
+    container_name: upstream
+    image: jadkhaddad/upstream:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command:
+      - "--config-file"
+      - "/etc/upstream/config.yaml"
+    environment:
+      - RUST_LOG=upstream=debug
+    ports:
+      - "2776:2776"
+    restart: unless-stopped
+    volumes:
+      - ./container-config.yaml:/etc/upstream/config.yaml:ro
+      # This configuration works on linux hosts as well as this one `./certs:/etc/upstream/certs`
+      # where we mount the whole certs directory. With Debounce and Poll watch kinds.
+      # On windows hosts, one must use the Poll watch kind.
+      # TODO: Windows: check if files must be mounted individually or as a directory works
+      - ./certs/cert.pem:/etc/upstream/certs/cert.pem
+      - ./certs/key.pem:/etc/upstream/certs/key.pem
+      # Mount the whole certs directory instead of individual files
+      # - ./certs:/etc/upstream/certs

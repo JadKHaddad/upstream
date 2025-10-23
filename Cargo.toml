@@ -1,0 +1,21 @@
+[package]
+name = "upstream"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tokio = { version = "1.47.1", features = ["full"] }
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+anyhow = "1"
+futures = "0.3"
+clap = { version = "4.5.23", features = ["derive", "env"] }
+rustls = { version = "0.23.32" }
+tokio-rustls = { version = "0.26.3" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_yaml = "0.9.34"
+humantime-serde = "1.1.1"
+notify = "8.2.0"
+notify-debouncer-full = "0.6.0"
+arc-swap = "1.7.1"
+hickory-resolver = { version = "0.25.2" }

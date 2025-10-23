@@ -1,0 +1,25 @@
+# runtime: MultiThread
+runtime: CurrentThread
+dns_resolver: Hickory
+# dns_resolver: Tokio
+hosts:
+  - addr: 127.0.0.1:2776
+    kind: Tls
+    certs:
+      certs: "certs/cert.pem"
+      key: "certs/key.pem"
+      watch:
+        kind: Debounce
+        duration: 2s
+    upstreams:
+      - domain: 127.0.0.1
+        port: 8000
+      - domain: 127.0.0.1
+        port: 8080
+  - addr: 127.0.0.1:2777
+    kind: Tcp
+    upstreams:
+      - domain: 127.0.0.1
+        port: 7000
+      - domain: 127.0.0.1
+        port: 7070
