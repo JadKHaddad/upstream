@@ -43,6 +43,7 @@ impl Upstream {
                     resolver.clone(),
                     TlsClientConfigProvider::webpki(),
                 ),
+                UpstreamConfigTlsCertsKind::File { file } => todo!(),
             },
         };
 

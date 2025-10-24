@@ -15,13 +15,13 @@ pub enum TlsServerConfigProvider {
 }
 
 impl TlsServerConfigProvider {
-    pub async fn file_static(loader: FileTlsServerConfigLoader) -> anyhow::Result<Self> {
+    pub async fn static_file(loader: FileTlsServerConfigLoader) -> anyhow::Result<Self> {
         let provider = StaticFileTlsServerConfigProvider::new(loader).await?;
 
         Ok(Self::StaticFile(provider))
     }
 
-    pub async fn file_watch(
+    pub async fn watch_file(
         loader: FileTlsServerConfigLoader,
         watch: Watch,
     ) -> anyhow::Result<Self> {

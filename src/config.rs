@@ -92,6 +92,16 @@ pub enum UpstreamConfigKind {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(tag = "kind")]
 pub enum UpstreamConfigTlsCertsKind {
     WebPki,
+    File {
+        file: UpstreamConfigTlsCertsFileKind,
+    },
+}
+
+#[derive(Debug, Deserialize)]
+pub struct UpstreamConfigTlsCertsFileKind {
+    pub certs: PathBuf,
+    pub watch: Option<Watch>,
 }

@@ -57,9 +57,9 @@ fn main() -> anyhow::Result<()> {
                         let loader = FileTlsServerConfigLoader::new(certs.certs, certs.key);
 
                         let provider = match certs.watch {
-                            None => TlsServerConfigProvider::file_static(loader).await?,
+                            None => TlsServerConfigProvider::static_file(loader).await?,
                             Some(watch) => {
-                                TlsServerConfigProvider::file_watch(loader, watch).await?
+                                TlsServerConfigProvider::watch_file(loader, watch).await?
                             }
                         };
 

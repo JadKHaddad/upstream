@@ -35,4 +35,19 @@ hosts:
       - domain: www.google.com
         port: 443
         kind: Tls
-        certs: WebPki
+        certs: 
+          kind: WebPki
+  
+  - addr: 127.0.0.1:2779
+    kind: Tcp
+    upstreams:
+      - domain: www.google.com
+        port: 443
+        kind: Tls
+        certs: 
+          kind: File
+          file:
+            certs: "certs/ca-cert.pem"
+            watch:
+              kind: Debounce
+              duration: 2s
