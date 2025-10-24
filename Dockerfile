@@ -8,4 +8,4 @@ FROM scratch
 COPY --from=builder /usr/src/upstream/target/x86_64-unknown-linux-musl/release/upstream /upstream
 ENTRYPOINT ["/upstream"]
 
-# docker build -t jadkhaddad/upstream:latest .
+# docker build -t jadkhaddad/upstream:0.1.0 .
