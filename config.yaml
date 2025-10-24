@@ -38,16 +38,17 @@ hosts:
         certs: 
           kind: WebPki
   
+  # Connect to this without tls and it will forward the stream to its self with tls then it will forward it to the upstreams defined in `127.0.0.1:2776`
   - addr: 127.0.0.1:2779
     kind: Tcp
     upstreams:
-      - domain: www.google.com
-        port: 443
+      - domain: localhost
+        port: 2776
         kind: Tls
         certs: 
           kind: File
           file:
-            certs: "certs/ca-cert.pem"
+            certs: "certs/cert.pem"
             watch:
               kind: Debounce
               duration: 2s

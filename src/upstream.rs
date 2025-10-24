@@ -3,6 +3,7 @@ use std::net::SocketAddr;
 use crate::{
     DnsResolver, TlsClientConfigProvider,
     config::{UpstreamConfig, UpstreamConfigKind, UpstreamConfigTlsCertsKind},
+    loader::FileTlsClientConfigLoader,
     upstream::connected::ConnectedUpstream,
 };
 
@@ -31,23 +32,38 @@ impl Upstream {
         }
     }
 
-    pub fn from_config(upstream: UpstreamConfig, resolver: DnsResolver) -> Self {
+    pub async fn try_from_config(
+        upstream: UpstreamConfig,
+        resolver: DnsResolver,
+    ) -> anyhow::Result<Self> {
         let upstream = match upstream.kind {
             UpstreamConfigKind::Tcp => TcpUpstream::plain(
                 UpstreamAddress::new(upstream.domain.leak(), upstream.port),
                 resolver.clone(),
             ),
-            UpstreamConfigKind::Tls { certs } => match certs {
-                UpstreamConfigTlsCertsKind::WebPki => TcpUpstream::tls(
+            UpstreamConfigKind::Tls { certs } => {
+                let provider = match certs {
+                    UpstreamConfigTlsCertsKind::WebPki => TlsClientConfigProvider::webpki(),
+                    UpstreamConfigTlsCertsKind::File { file } => {
+                        let loader = FileTlsClientConfigLoader::new(file.certs);
+
+                        match file.watch {
+                            None => TlsClientConfigProvider::static_file(loader).await?,
+                            Some(watch) => {
+                                TlsClientConfigProvider::watch_file(loader, watch).await?
+                            }
+                        }
+                    }
+                };
+                TcpUpstream::tls(
                     UpstreamAddress::new(upstream.domain.leak(), upstream.port),
                     resolver.clone(),
-                    TlsClientConfigProvider::webpki(),
-                ),
-                UpstreamConfigTlsCertsKind::File { file } => todo!(),
-            },
+                    provider,
+                )
+            }
         };
 
-        Self::tcp(upstream)
+        Ok(Self::tcp(upstream))
     }
 
     pub async fn connect(&self) -> anyhow::Result<(ConnectedUpstream, SocketAddr)> {

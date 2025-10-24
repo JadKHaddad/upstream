@@ -1,6 +1,7 @@
 use anyhow::Context;
 use clap::Parser;
 
+use futures::{StreamExt, TryStreamExt};
 use tokio::task::JoinSet;
 use upstream::{
     Args, DnsResolver, FileTlsServerConfigLoader, Host, LoadBalancer, TcpHost,
@@ -37,15 +38,16 @@ fn main() -> anyhow::Result<()> {
                         1 => {
                             let upstream = host.upstreams.remove(0);
 
-                            let upstream = Upstream::from_config(upstream, resolver.clone());
+                            let upstream =
+                                Upstream::try_from_config(upstream, resolver.clone()).await?;
 
                             LoadBalancer::identity(upstream)
                         }
                         _ => LoadBalancer::static_fifo(Box::leak(
-                            host.upstreams
-                                .into_iter()
-                                .map(|upstream| Upstream::from_config(upstream, resolver.clone()))
-                                .collect::<Vec<_>>()
+                            futures::stream::iter(host.upstreams.into_iter())
+                                .then(|u| Upstream::try_from_config(u, resolver.clone()))
+                                .try_collect::<Vec<_>>()
+                                .await?
                                 .into_boxed_slice(),
                         )),
                     }
