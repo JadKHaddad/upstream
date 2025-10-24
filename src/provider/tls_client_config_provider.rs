@@ -12,6 +12,7 @@ use watch_file_tls_client_config_provider::WatchFileTlsClientConfigProvider;
 
 use crate::{config::Watch, loader::FileTlsClientConfigLoader};
 
+// TODO: add the native certs provider as well
 #[derive(Clone)]
 pub enum TlsClientConfigProvider {
     WebPki(WebPkiTlsClientConfigProvider),
