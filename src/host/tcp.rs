@@ -40,31 +40,39 @@ impl TcpHost {
         tracing::info!(%addr, "Listening");
 
         loop {
-            let (mut stream, addr) = listener.accept().await?;
+            match listener.accept().await {
+                Ok((mut stream, addr)) => {
+                    tracing::info!(%addr, "Accepted connection");
 
-            tracing::info!(%addr, "Accepted connection");
+                    let Some(upstream) = self.load_balancer.next() else {
+                        unreachable!("Load balancer should emit an upstream")
+                    };
 
-            let Some(upstream) = self.load_balancer.next() else {
-                unreachable!("Load balancer should emit an upstream")
-            };
+                    tracing::info!(%addr, ?upstream, "Found upstream");
 
-            tracing::info!(%addr, ?upstream, "Found upstream");
+                    let fut = async move {
+                        let (mut upstream, upstream_addr) = upstream.connect().await?;
 
-            let fut = async move {
-                let (mut upstream, upstream_addr) = upstream.connect().await?;
+                        tokio::io::copy_bidirectional(&mut stream, &mut upstream).await?;
 
-                tokio::io::copy_bidirectional(&mut stream, &mut upstream).await?;
+                        tracing::info!(%addr, %upstream_addr, "Connection closed");
 
-                tracing::info!(%addr, %upstream_addr, "Connection closed");
+                        Ok::<(), anyhow::Error>(())
+                    };
 
-                Ok::<(), anyhow::Error>(())
-            };
-
-            tokio::spawn(async move {
-                if let Err(err) = fut.await {
-                    tracing::error!(%err, %addr, "Connection error");
+                    tokio::spawn(async move {
+                        if let Err(err) = fut.await {
+                            tracing::error!(%err, %addr, "Connection error");
+                        }
+                    });
                 }
-            });
+
+                Err(err) => {
+                    tracing::error!(%err, "Failed to accept connection");
+
+                    continue;
+                }
+            }
         }
     }
 }
