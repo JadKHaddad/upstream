@@ -6,7 +6,7 @@ use tokio::task::JoinSet;
 use upstream::{
     Args, DnsResolver, FileTlsServerConfigLoader, Host, LoadBalancer, TcpHost,
     TlsServerConfigProvider, Upstream,
-    config::{Config, DnsResolverConfig, HostConfigKind, RuntimeConfig},
+    config::{Config, DnsResolverConfig, HostCertsWatch, HostConfigKind, RuntimeConfig},
 };
 
 fn main() -> anyhow::Result<()> {
@@ -44,7 +44,7 @@ fn main() -> anyhow::Result<()> {
                             LoadBalancer::identity(upstream)
                         }
                         _ => LoadBalancer::static_fifo(Box::leak(
-                            futures::stream::iter(host.upstreams.into_iter())
+                            futures::stream::iter(host.upstreams)
                                 .then(|u| Upstream::try_from_config(u, resolver.clone()))
                                 .try_collect::<Vec<_>>()
                                 .await?
@@ -59,9 +59,14 @@ fn main() -> anyhow::Result<()> {
                         let loader = FileTlsServerConfigLoader::new(certs.certs, certs.key);
 
                         let provider = match certs.watch {
-                            None => TlsServerConfigProvider::static_file(loader).await?,
-                            Some(watch) => {
-                                TlsServerConfigProvider::watch_file(loader, watch).await?
+                            HostCertsWatch::Static => {
+                                TlsServerConfigProvider::static_file(loader).await?
+                            }
+                            HostCertsWatch::Dynamic => {
+                                TlsServerConfigProvider::dynamic_file(loader).await?
+                            }
+                            HostCertsWatch::Watch { method } => {
+                                TlsServerConfigProvider::watch_file(loader, method).await?
                             }
                         };
 

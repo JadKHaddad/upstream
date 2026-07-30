@@ -1,39 +1,50 @@
 use std::sync::Arc;
 
-use crate::{FileTlsServerConfigLoader, config::Watch};
+use crate::{FileTlsServerConfigLoader, config::WatchMethod};
 
 mod static_file_tls_server_config_provider;
 use static_file_tls_server_config_provider::StaticFileTlsServerConfigProvider;
+
+mod dynamic_file_tls_server_config_provider;
+use dynamic_file_tls_server_config_provider::DynamicFileTlsServerConfigProvider;
 
 mod watch_file_tls_server_config_provider;
 use watch_file_tls_server_config_provider::WatchFileTlsServerConfigProvider;
 
 #[derive(Clone)]
 pub enum TlsServerConfigProvider {
-    StaticFile(StaticFileTlsServerConfigProvider),
-    WatchFile(WatchFileTlsServerConfigProvider),
+    Static(StaticFileTlsServerConfigProvider),
+    Dynamic(DynamicFileTlsServerConfigProvider),
+    Watch(WatchFileTlsServerConfigProvider),
 }
 
 impl TlsServerConfigProvider {
     pub async fn static_file(loader: FileTlsServerConfigLoader) -> anyhow::Result<Self> {
         let provider = StaticFileTlsServerConfigProvider::new(loader).await?;
 
-        Ok(Self::StaticFile(provider))
+        Ok(Self::Static(provider))
+    }
+
+    pub async fn dynamic_file(loader: FileTlsServerConfigLoader) -> anyhow::Result<Self> {
+        let provider = DynamicFileTlsServerConfigProvider::new(loader).await?;
+
+        Ok(Self::Dynamic(provider))
     }
 
     pub async fn watch_file(
         loader: FileTlsServerConfigLoader,
-        watch: Watch,
+        watch: WatchMethod,
     ) -> anyhow::Result<Self> {
         let provider = WatchFileTlsServerConfigProvider::new(loader, watch).await?;
 
-        Ok(Self::WatchFile(provider))
+        Ok(Self::Watch(provider))
     }
 
-    pub fn get_server_config(&self) -> Arc<rustls::ServerConfig> {
+    pub async fn get_server_config(&self) -> Arc<rustls::ServerConfig> {
         match self {
-            TlsServerConfigProvider::StaticFile(provider) => provider.get_server_config(),
-            TlsServerConfigProvider::WatchFile(provider) => provider.get_server_config(),
+            TlsServerConfigProvider::Static(provider) => provider.get_server_config(),
+            TlsServerConfigProvider::Dynamic(provider) => provider.get_server_config().await,
+            TlsServerConfigProvider::Watch(provider) => provider.get_server_config(),
         }
     }
 }

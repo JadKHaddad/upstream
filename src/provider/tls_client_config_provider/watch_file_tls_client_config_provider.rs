@@ -5,7 +5,7 @@ use arc_swap::ArcSwap;
 use futures::StreamExt;
 use rustls::ClientConfig;
 
-use crate::{Watcher, config::Watch, loader::FileTlsClientConfigLoader};
+use crate::{Watcher, config::WatchMethod, loader::FileTlsClientConfigLoader};
 
 #[derive(Clone)]
 pub struct WatchFileTlsClientConfigProvider {
@@ -14,7 +14,10 @@ pub struct WatchFileTlsClientConfigProvider {
 
 /// TODO: Duplicate of watch_file_tls_server_config_provider.rs, can we abstract over server/client?
 impl WatchFileTlsClientConfigProvider {
-    pub async fn new(loader: FileTlsClientConfigLoader, watch: Watch) -> anyhow::Result<Self> {
+    pub async fn new(
+        loader: FileTlsClientConfigLoader,
+        watch: WatchMethod,
+    ) -> anyhow::Result<Self> {
         let config = loader.load().await.context("Failed to load config")?;
         let config = Arc::new(ArcSwap::new(Arc::new(config)));
 
@@ -26,8 +29,8 @@ impl WatchFileTlsClientConfigProvider {
             let (tx, mut rx) = futures::channel::mpsc::unbounded();
 
             let mut watcher = match watch {
-                Watch::Debounce { duration } => Watcher::debounce(duration, tx),
-                Watch::Poll { duration } => Watcher::poll(duration, tx),
+                WatchMethod::Debounce { duration } => Watcher::debounce(duration, tx),
+                WatchMethod::Poll { duration } => Watcher::poll(duration, tx),
             }?;
 
             let paths = loader.paths();
