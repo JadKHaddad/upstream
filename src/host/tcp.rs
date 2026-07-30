@@ -128,7 +128,7 @@ impl Listener {
         match &self.kind {
             ListenerKind::Plain => Ok((ServerTcpStream::plain(stream), addr)),
             ListenerKind::Tls(provider) => {
-                let config = provider.get_server_config();
+                let config = provider.get_server_config().await;
 
                 let acceptor = tokio_rustls::TlsAcceptor::from(config);
 

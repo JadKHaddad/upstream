@@ -7,7 +7,8 @@ hosts:
       certs: "/etc/upstream/certs/cert.pem"
       key: "/etc/upstream/certs/key.pem"
       watch:
-        kind: Debounce
+        kind: Watch
+        method: Debounce
         duration: 2s
     upstreams:
       - domain: 192.168.178.97

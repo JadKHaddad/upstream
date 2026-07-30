@@ -60,12 +60,33 @@ pub struct HostConfig {
 pub struct HostConfigCerts {
     pub certs: PathBuf,
     pub key: PathBuf,
-    pub watch: Option<Watch>,
+    pub watch: HostCertsWatch,
 }
 
 #[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq, Hash)]
 #[serde(tag = "kind")]
-pub enum Watch {
+pub enum HostCertsWatch {
+    Static,
+    Dynamic,
+    Watch {
+        #[serde(flatten)]
+        method: WatchMethod,
+    },
+}
+
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq, Hash)]
+#[serde(tag = "kind")]
+pub enum UpstreamCertsWatch {
+    Static,
+    Watch {
+        #[serde(flatten)]
+        method: WatchMethod,
+    },
+}
+
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq, Hash)]
+#[serde(tag = "method")]
+pub enum WatchMethod {
     Debounce {
         #[serde(with = "humantime_serde")]
         duration: Duration,
@@ -103,5 +124,5 @@ pub enum UpstreamConfigTlsCertsKind {
 #[derive(Debug, Deserialize)]
 pub struct UpstreamConfigTlsCertsFileKind {
     pub certs: PathBuf,
-    pub watch: Option<Watch>,
+    pub watch: UpstreamCertsWatch,
 }

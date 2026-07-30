@@ -3,20 +3,45 @@ runtime: CurrentThread
 dns_resolver: Hickory
 # dns_resolver: Tokio
 hosts:
-  - addr: 127.0.0.1:2776
+  - addr: 127.0.0.1:2000
     kind: Tls
     certs:
       certs: "certs/cert.pem"
       key: "certs/key.pem"
       watch:
-        kind: Debounce
-        duration: 2s
+        # The cert file will be load once on startup and will not be watched for changes. If the cert file is updated, the server will not reload the certs.
+        kind: Static
     upstreams:
       - domain: 127.0.0.1
         port: 8001
         kind: Tcp
+
+  - addr: 127.0.0.1:2001
+    kind: Tls
+    certs:
+      certs: "certs/cert.pem"
+      key: "certs/key.pem"
+      watch:
+        # The cert file will be load once on startup and every time a new connection is made, the cert file will be reloaded. If the cert file is updated, the server will reload the certs on the next connection.
+        kind: Dynamic
+    upstreams:
       - domain: 127.0.0.1
-        port: 8081
+        port: 8001
+        kind: Tcp
+
+  - addr: 127.0.0.1:2002
+    kind: Tls
+    certs:
+      certs: "certs/cert.pem"
+      key: "certs/key.pem"
+      watch:
+        # The cert file will be watched for changes and will be reloaded when it changes. If the cert file is updated, the server will reload the certs on the next connection.
+        kind: Watch
+        method: Debounce
+        duration: 2s
+    upstreams:
+      - domain: 127.0.0.1
+        port: 8001
         kind: Tcp
 
   - addr: 127.0.0.1:2777
@@ -50,5 +75,19 @@ hosts:
           file:
             certs: "certs/cert.pem"
             watch:
-              kind: Debounce
+              kind: Watch
+              method: Debounce
               duration: 2s
+    
+  - addr: 127.0.0.1:2780
+    kind: Tcp
+    upstreams:
+      - domain: localhost
+        port: 2776
+        kind: Tls
+        certs: 
+          kind: File
+          file:
+            certs: "certs/cert.pem"
+            watch:
+              kind: Static

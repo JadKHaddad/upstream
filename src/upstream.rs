@@ -2,7 +2,7 @@ use std::net::SocketAddr;
 
 use crate::{
     DnsResolver, TlsClientConfigProvider,
-    config::{UpstreamConfig, UpstreamConfigKind, UpstreamConfigTlsCertsKind},
+    config::{UpstreamCertsWatch, UpstreamConfig, UpstreamConfigKind, UpstreamConfigTlsCertsKind},
     loader::FileTlsClientConfigLoader,
     upstream::connected::ConnectedUpstream,
 };
@@ -48,9 +48,11 @@ impl Upstream {
                         let loader = FileTlsClientConfigLoader::new(file.certs);
 
                         match file.watch {
-                            None => TlsClientConfigProvider::static_file(loader).await?,
-                            Some(watch) => {
-                                TlsClientConfigProvider::watch_file(loader, watch).await?
+                            UpstreamCertsWatch::Static => {
+                                TlsClientConfigProvider::static_file(loader).await?
+                            }
+                            UpstreamCertsWatch::Watch { method } => {
+                                TlsClientConfigProvider::watch_file(loader, method).await?
                             }
                         }
                     }

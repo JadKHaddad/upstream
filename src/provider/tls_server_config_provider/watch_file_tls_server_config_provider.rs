@@ -5,7 +5,7 @@ use arc_swap::ArcSwap;
 use futures::StreamExt;
 use rustls::ServerConfig;
 
-use crate::{FileTlsServerConfigLoader, Watcher, config::Watch};
+use crate::{FileTlsServerConfigLoader, Watcher, config::WatchMethod};
 
 #[derive(Clone)]
 pub struct WatchFileTlsServerConfigProvider {
@@ -14,7 +14,10 @@ pub struct WatchFileTlsServerConfigProvider {
 
 /// TODO: can we make this just take a stream of change events of the files it needs so that we can create a global watcher that watches everything?
 impl WatchFileTlsServerConfigProvider {
-    pub async fn new(loader: FileTlsServerConfigLoader, watch: Watch) -> anyhow::Result<Self> {
+    pub async fn new(
+        loader: FileTlsServerConfigLoader,
+        watch: WatchMethod,
+    ) -> anyhow::Result<Self> {
         let config = loader.load().await.context("Failed to load config")?;
         let config = Arc::new(ArcSwap::new(Arc::new(config)));
 
@@ -26,8 +29,8 @@ impl WatchFileTlsServerConfigProvider {
             let (tx, mut rx) = futures::channel::mpsc::unbounded();
 
             let mut watcher = match watch {
-                Watch::Debounce { duration } => Watcher::debounce(duration, tx),
-                Watch::Poll { duration } => Watcher::poll(duration, tx),
+                WatchMethod::Debounce { duration } => Watcher::debounce(duration, tx),
+                WatchMethod::Poll { duration } => Watcher::poll(duration, tx),
             }?;
 
             let paths = loader.paths();
