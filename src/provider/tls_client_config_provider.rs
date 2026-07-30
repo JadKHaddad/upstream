@@ -10,10 +10,7 @@ use static_file_tls_client_config_provider::StaticFileTlsClientConfigProvider;
 mod watch_file_tls_client_config_provider;
 use watch_file_tls_client_config_provider::WatchFileTlsClientConfigProvider;
 
-use crate::{
-    config::{HostCertsWatch, UpstreamCertsWatch, WatchMethod},
-    loader::FileTlsClientConfigLoader,
-};
+use crate::{config::WatchMethod, loader::FileTlsClientConfigLoader};
 
 // TODO: add the native certs provider as well
 #[derive(Clone)]
